@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Zithoudingen</title>
+</head>
+
+<body>
+
+    <h1>Focus mode</h1>
+    <h2>Een goede zithouding voor jouw gezondheid!</h2>
+    <div class="intro">
+        <p> Zit jij uren achter het scherm voor je studie of voor je werk? En heb je last van een slechte postuur?
+            Wij helpen je op weg!
+        </p>
+        <p>Het is simpel. Voordat je aan de slag gaat met werken sluit je je webcam aan. Vervolgens open je onze website
+            en
+            zet je de camera aan. Wij houden in de gaten of je in een gezonde zithouding bent. Als dat niet zo is sturen
+            we
+            jou een waarschuwing zodat jij tijdens het concentreren je gezondheid niet vergeet! </p>
+    </div>
+
+    <div>Teachable Machine Pose Model</div>
+    <button type="button" onclick="init()">Start
+
+    </button>
+
+    <div class="popup" onclick="myFunction()">Click me!
+        <span class="popuptext" id="myPopup">Waarschuwing! Let op jouw zithouding.</span>
+      </div>
+      
+    <div><canvas id="canvas"></canvas></div>
+    <div id="label-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
+
+    <script type="text/javascript">
+        // the link to your model provided by Teachable Machine export panel
+        const URL = "./zithouingen_teachablemachine/";
+        let model, webcam, ctx, labelContainer, maxPredictions;
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+
+            model = await tmPose.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+
+            const size = 200;
+            const flip = true;
+            webcam = new tmPose.Webcam(size, size, flip);
+            await webcam.setup();
+            await webcam.play();
+            window.requestAnimationFrame(loop);
+
+            const canvas = document.getElementById("canvas");
+            canvas.width = size;
+            canvas.height = size;
+            ctx = canvas.getContext("2d");
+            labelContainer = document.getElementById("label-container");
+            for (let i = 0; i < maxPredictions; i++) {
+                labelContainer.appendChild(document.createElement("div"));
+            }
+        }
+
+        async function loop(timestamp) {
+            webcam.update();
+            await predict();
+            window.requestAnimationFrame(loop);
+        }
+
+        {
+
+            drawPose(pose);
+        }
+
+        function drawPose(pose) {
+            if (webcam.canvas) {
+                ctx.drawImage(webcam.canvas, 0, 0);
+                if (pose) {
+                    const minPartConfidence = 0.5;
+                    tmPose.drawKeypoints(pose.keypoints, minPartConfidence, ctx);
+                    tmPose.drawSkeleton(pose.keypoints, minPartConfidence, ctx);
+                }
+        }
+        }
+    </script>
+
+</body>
+
+</html>
